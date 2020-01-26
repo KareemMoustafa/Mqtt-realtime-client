@@ -4,8 +4,6 @@ const config = require('../../config/config.js');
 const publisher = () => {
 }
 
-publisher.topic = 'Bus'
-
 function start() {
     amqpClient.connect(config.mqtt.default.host + "?heartbeat=60", function(err, conn) {
       if (err) {
@@ -55,22 +53,22 @@ function start() {
   }
   
   // method to publish a message, will queue messages internally if the connection is down and resend later
-  publisher.publish = (routingKey, content) => {
+  publisher.publish = (exchange, routingKey, content) => {
     try {
-      pubChannel.assertExchange(publisher.topic, 'fanout', {durable: false}, function(err, ok) {
+      pubChannel.assertExchange(exchange, 'fanout', {durable: false}, function(err, ok) {
         if (closeOnErr(err)) return;
-        pubChannel.publish(publisher.topic, routingKey, content, { persistent: true },
+        pubChannel.publish(exchange, routingKey, content, { persistent: true },
                           function(err, ok) {
                             if (err) {
                               console.error("[AMQP] publish", err);
-                              offlinePubQueue.push([publisher.topic, routingKey, content]);
+                              offlinePubQueue.push([exchange, routingKey, content]);
                               pubChannel.connection.close();
                             }
         });
       });                      
     } catch (e) {
       console.error("[AMQP] publish", e.message);
-      offlinePubQueue.push([publisher.topic, routingKey, content]);
+      offlinePubQueue.push([exchange, routingKey, content]);
     }
   }
   
