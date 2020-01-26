@@ -8,22 +8,6 @@ const bodyParser = require('body-parser')
 const app = express();
 
 app.use (function (req, res, next) {
-    if(config.app.env === 'prod') {
-        let protomatch = /^(https?):\/\//
-        let subdomain = null
-        if(req.headers.referer !== undefined) {
-            let url = req.headers.referer.replace(protomatch, '')
-            subdomain = url.split('.')[0]
-        }else {
-            subdomain = 'default'
-        }
-        
-        if(config.mongo[subdomain] === undefined) subdomain = 'default'
-        if(config.mysql[subdomain] === undefined) subdomain = 'default'
-        global.SUBDOMAIN = subdomain
-    } else {
-        global.SUBDOMAIN = 'default'
-    }
     next()
 });
 
@@ -34,7 +18,7 @@ app.use(bodyParser.urlencoded({limit: '500mb', extended: true, parameterLimit:50
 
 // define a simple route
 app.get('/', (req, res) => {
-    res.json({'message': 'Welcome to mqtt application'});
+    res.json({'message': 'Kick to mqtt application'});
 });
 
 require('./app/routes/index.js')(app);

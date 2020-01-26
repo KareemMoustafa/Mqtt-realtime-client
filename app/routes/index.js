@@ -1,6 +1,6 @@
 module.exports = (app) => {
-    const mqtt = require('../controllers/mqtt.js');
+    const client = require('../controllers/client.js');
     // Publish the topic
-    app.post('/publish', mqtt.publish);
+    app.post('/publish', client.publish);
 
 }

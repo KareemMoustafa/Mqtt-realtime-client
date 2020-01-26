@@ -31,7 +31,6 @@ function start() {
   
   function whenConnected() {
     startPublisher();
-    // startWorker();
   }
   
   var pubChannel = null;
@@ -46,12 +45,7 @@ function start() {
         console.log("[AMQP] channel closed");
       });
   
-      pubChannel = ch;
-      try {
-       ch.assertExchange(publisher.topic, 'fanout', {durable: false})
-      } catch (e) {
-        console.error("[AMQP] exchange", e.message);
-      }       
+      pubChannel = ch;      
       while (true) {
         var m = offlinePubQueue.shift();
         if (!m) break;
@@ -61,58 +55,24 @@ function start() {
   }
   
   // method to publish a message, will queue messages internally if the connection is down and resend later
-  publisher.publish = (exchange, routingKey, content) => {
+  publisher.publish = (routingKey, content) => {
     try {
-      pubChannel.publish(exchange, routingKey, content, { persistent: true },
-                         function(err, ok) {
-                           if (err) {
-                             console.error("[AMQP] publish", err);
-                             offlinePubQueue.push([exchange, routingKey, content]);
-                             pubChannel.connection.close();
-                           }
-                         });
+      pubChannel.assertExchange(publisher.topic, 'fanout', {durable: false}, function(err, ok) {
+        if (closeOnErr(err)) return;
+        pubChannel.publish(publisher.topic, routingKey, content, { persistent: true },
+                          function(err, ok) {
+                            if (err) {
+                              console.error("[AMQP] publish", err);
+                              offlinePubQueue.push([publisher.topic, routingKey, content]);
+                              pubChannel.connection.close();
+                            }
+        });
+      });                      
     } catch (e) {
       console.error("[AMQP] publish", e.message);
-      offlinePubQueue.push([exchange, routingKey, content]);
+      offlinePubQueue.push([publisher.topic, routingKey, content]);
     }
   }
-  
-  // A worker that acks messages only if processed succesfully
-  /* function startWorker() {
-    amqpConn.createChannel(function(err, ch) {
-      if (closeOnErr(err)) return;
-      ch.on("error", function(err) {
-        console.error("[AMQP] channel error", err.message);
-      });
-      ch.on("close", function() {
-        console.log("[AMQP] channel closed");
-      });
-      ch.prefetch(10);
-      ch.assertQueue("jobs", { durable: true }, function(err, _ok) {
-        if (closeOnErr(err)) return;
-        ch.consume("jobs", processMsg, { noAck: false });
-        console.log("Worker is started");
-      });
-  
-      function processMsg(msg) {
-        work(msg, function(ok) {
-          try {
-            if (ok)
-              ch.ack(msg);
-            else
-              ch.reject(msg, true);
-          } catch (e) {
-            closeOnErr(e);
-          }
-        });
-      }
-    });
-  }
-  
-  function work(msg, cb) {
-    console.log("Got msg", msg.content.toString());
-    cb(true);
-  } */
   
   function closeOnErr(err) {
     if (!err) return false;
