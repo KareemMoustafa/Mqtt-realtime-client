@@ -38,7 +38,7 @@ user.list = (param, res, callback) => {
                         data: 'There is no user information'
                     });
                 }
-                memcached.set('userList', users, 10 , (err) => {
+                memcached.set('userList', users, 1000, (err) => {
                     console.log('set memcache error', err)
                 });
                 console.log('users from db..')
