@@ -14,7 +14,7 @@ function webPush(req, res) {
   userModel.list(param, res, async (users) => {
     if (users) {
       users.forEach(user => {
-        let topic = 'WEB-USER-' + user.UserPID
+        let topic = 'WEB-USER-' + user.ID
         publisher.publish(topic, "location", new Buffer(JSON.stringify(req.body)));
       });
     }
