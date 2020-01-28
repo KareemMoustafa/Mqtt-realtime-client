@@ -46,7 +46,7 @@ function start() {
       ch.assertQueue("location", { durable: true }, function(err, _ok) {
         if (closeOnErr(err)) return;
         ch.consume("location", processMsg, { noAck: false });
-        console.log("Worker is started");
+        console.log("[AMQP] Worker is started");
       });
   
       function processMsg(msg) {
@@ -65,7 +65,7 @@ function start() {
   }
   
   function work(msg, cb) {
-    console.log("Got msg", msg.content.toString());
+    console.log("[AMQP] Got msg", msg.content.toString());
     cb(true);
   }
   

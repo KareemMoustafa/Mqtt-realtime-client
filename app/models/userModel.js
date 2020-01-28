@@ -10,7 +10,7 @@ user.list = (param, res, callback) => {
     memcached.get('userList', function(err, data){
         //from cache..
         if (data) {
-            console.log('users from cache..')
+            console.log('[MEMCACHED] users from cache..')
             return callback(data);
         }
         else {
@@ -25,7 +25,7 @@ user.list = (param, res, callback) => {
 
             sql.query(query, [param.SchoolID, param.SchoolID], (err, users) => {
                 if(err) {
-                    console.log(users)
+                    console.error('[MEMCACHED]', err)
                     return res.send({
                         success: false,
                         data: {message: err}
@@ -39,9 +39,9 @@ user.list = (param, res, callback) => {
                     });
                 }
                 memcached.set('userList', users, 10000, (err) => {
-                    console.log('set memcache error', err)
+                    console.error('[MEMCACHED]', err)
                 });
-                console.log('users from db..')
+                console.log('[MEMCACHED] users from db..')
                 return callback(users);
             })            
         }
